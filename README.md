@@ -1,152 +1,177 @@
-# Android Reverse Engineering & API Extraction
+# Android 逆向与 API 提取
 
-This repository includes both a `Claude Code` plugin and a `Codex` plugin wrapper for the same Android reverse-engineering skill.
+这个仓库同时包含一套 `Claude Code` 插件和一套 `Codex` 插件封装，它们共用同一个 Android 逆向 skill。
 
-A Claude Code skill that decompiles Android APK/XAPK/JAR/AAR files, **extracts the HTTP APIs** used by the app, and guides deeper reverse-engineering work such as Frida triage, runtime request inspection, JNI/SO analysis, and sign-location analysis.
+这是一个用于 Claude Code 的技能，能够反编译 Android APK/XAPK/JAR/AAR 文件，**提取应用使用的 HTTP API**，并为更深入的逆向分析提供方法指引，例如 Frida 前期侦察、运行时请求检查、JNI/SO 分析，以及签名定位分析。
 
-## What it does
+## 项目来源
 
-- **Decompiles** APK, XAPK, JAR, and AAR files using jadx and Fernflower/Vineflower (single engine or side-by-side comparison)
-- **Extracts and documents APIs**: Retrofit endpoints, OkHttp calls, hardcoded URLs, auth headers and tokens
-- **Traces call flows** from Activities/Fragments through ViewModels and repositories down to HTTP calls
-- **Analyzes** app structure: manifest, packages, architecture patterns
-- **Handles obfuscated code**: strategies for navigating ProGuard/R8 output
-- **Guides runtime analysis**: when to use Frida, where to hook, and how to narrow the request/sign pipeline
-- **Guides native analysis**: JNI/SO triage, sign-generation boundary identification, and when unidbg is worth the cost
+本项目基于原项目 [SimoneAvogadro/android-reverse-engineering-skill](https://github.com/SimoneAvogadro/android-reverse-engineering-skill) 演化而来。
 
-## Frida Scope
+原项目主要聚焦于：
 
-The skill now includes documentation for Frida-oriented workflows, but it does **not** yet ship runnable Frida helper scripts or an auto-attach command.
+- Android APK/XAPK/JAR/AAR 的反编译
+- API 提取与调用链分析
+- Claude Code skill 形态下的基础工作流
 
-Current state:
+本仓库在此基础上做了面向当前使用场景的扩展和调整。
 
-- The skill can guide static triage before hooking
-- The skill can tell you which Java or JNI boundary is the best candidate to hook
-- The skill can structure runtime findings and native sign analysis
-- The repository does **not** yet include `scripts/` for `frida`, device attach, or automatic hook generation
+## 与原项目的差异
 
-In short: the project currently supports **Frida analysis workflow guidance**, not **built-in Frida execution tooling**.
+相比原项目，这个仓库目前的主要不同点是：
 
-## Requirements
+- 增加了 `Codex` 插件封装与相关元数据，不再只面向 Claude Code
+- README 已改为中文，更适合中文使用者直接阅读和上手
+- skill 描述范围已经扩展到 Frida 前期侦察、运行时分析、JNI/SO 分析、签名定位分析
+- 新增了 `dynamic-analysis.md` 与 `native-analysis.md` 两份参考文档，用于指导动态分析与 Native 分析流程
+- 文档中明确区分了“支持 Frida 分析方法”与“尚未内置 Frida 执行脚本”这两件事
+- 保留原有反编译与 API 提取能力的同时，更强调“先静态侦察，再决定是否进入动态分析”
 
-**Required:**
+## 功能概览
+
+- 使用 jadx 和 Fernflower/Vineflower 反编译 APK、XAPK、JAR、AAR，支持单引擎或双引擎对比
+- 提取并整理 API：Retrofit 接口、OkHttp 调用、硬编码 URL、鉴权头和 token
+- 从 Activity/Fragment 沿着 ViewModel、Repository 一路跟踪到 HTTP 调用
+- 分析应用结构：Manifest、包结构、架构模式
+- 处理混淆代码：提供在 ProGuard/R8 输出中定位逻辑的策略
+- 提供运行时分析指引：什么时候该用 Frida、该 hook 哪一层、如何收窄请求/签名链路
+- 提供 Native 分析指引：JNI/SO 侦察、签名生成边界识别，以及什么时候值得上 unidbg
+
+## Frida 支持范围
+
+这个 skill 现在已经包含面向 Frida 的分析方法文档，但**还没有**内置可直接执行的 Frida 辅助脚本，也没有自动 attach 的命令。
+
+当前状态：
+
+- 可以指导你在 hook 之前先完成静态侦察
+- 可以帮助你判断哪个 Java 或 JNI 边界最适合 hook
+- 可以组织运行时分析结论和 Native 签名分析结论
+- 仓库里**还没有**用于 `frida`、设备连接、自动生成 hook 模板的 `scripts/`
+
+一句话概括：当前项目支持的是 **Frida 分析流程指导**，不是 **内置 Frida 执行工具链**。
+
+## 依赖要求
+
+**必需：**
+
 - Java JDK 17+
-- [jadx](https://github.com/skylot/jadx) (CLI)
+- [jadx](https://github.com/skylot/jadx) 命令行工具
 
-**Optional (recommended):**
-- [Vineflower](https://github.com/Vineflower/vineflower) or [Fernflower](https://github.com/JetBrains/fernflower) — better output on complex Java code
-- [dex2jar](https://github.com/pxb1988/dex2jar) — needed to use Fernflower on APK/DEX files
+**可选但推荐：**
 
-See `plugins/android-reverse-engineering/skills/android-reverse-engineering/references/setup-guide.md` for detailed installation instructions.
+- [Vineflower](https://github.com/Vineflower/vineflower) 或 [Fernflower](https://github.com/JetBrains/fernflower)，用于在复杂 Java 代码上获得更好的反编译结果
+- [dex2jar](https://github.com/pxb1988/dex2jar)，用于在 APK/DEX 场景下配合 Fernflower 工作
 
-## Installation
+详细安装说明见 `plugins/android-reverse-engineering/skills/android-reverse-engineering/references/setup-guide.md`。
 
-### For Codex
+## 安装
 
-This repository now includes Codex-compatible plugin metadata:
+### 用于 Codex
+
+这个仓库已经包含 Codex 兼容的插件元数据：
 
 - `.agents/plugins/marketplace.json`
 - `plugins/android-reverse-engineering/.codex-plugin/plugin.json`
 
-The skill content remains in:
+skill 的主体内容位于：
 
 - `plugins/android-reverse-engineering/skills/android-reverse-engineering/`
 
-### From GitHub (recommended)
+### 从 GitHub 安装（推荐）
 
-Inside Claude Code, run:
+在 Claude Code 中运行：
 
 ```
 /plugin marketplace add SimoneAvogadro/android-reverse-engineering-skill
 /plugin install android-reverse-engineering@android-reverse-engineering-skill
 ```
 
-The skill will be permanently available in all future sessions.
+安装后，这个 skill 会在之后的会话中持续可用。
 
-### From a local clone
+### 从本地仓库安装
 
 ```bash
 git clone https://github.com/SimoneAvogadro/android-reverse-engineering-skill.git
 ```
 
-Then in Claude Code:
+然后在 Claude Code 中运行：
 
 ```
 /plugin marketplace add /path/to/android-reverse-engineering-skill
 /plugin install android-reverse-engineering@android-reverse-engineering-skill
 ```
 
-## Usage
+## 使用方式
 
-### Slash command
+### Slash 命令
 
 ```
 /decompile path/to/app.apk
 ```
 
-This runs the full workflow: dependency check, decompilation, and initial structure analysis.
+这会执行完整流程：检查依赖、执行反编译，并做初步结构分析。
 
-### Natural language
+### 自然语言触发
 
-The skill activates on phrases like:
+以下表达都可能触发这个 skill：
 
-- "Decompile this APK"
-- "Reverse engineer this Android app"
-- "Extract API endpoints from this app"
-- "Follow the call flow from LoginActivity"
-- "Analyze this AAR library"
-- "Find where this app generates its sign"
-- "Use Frida to inspect the request pipeline"
-- "Analyze the JNI or SO behind this token"
+- “反编译这个 APK”
+- “逆向分析这个 Android 应用”
+- “提取这个应用的 API 接口”
+- “从 LoginActivity 开始跟调用链”
+- “分析这个 AAR 库”
+- “找出这个应用的 sign 是在哪生成的”
+- “用 Frida 分析请求链路”
+- “分析这个 token 背后的 JNI 或 SO”
 
-### Manual scripts
+### 手动执行脚本
 
-The scripts can also be used standalone:
+这些脚本也可以单独运行：
 
 ```bash
-# Check dependencies
+# 检查依赖
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/check-deps.sh
 
-# Install a missing dependency (auto-detects OS and package manager)
+# 安装缺失依赖（自动识别操作系统和包管理器）
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.sh jadx
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.sh vineflower
 
-# Decompile APK with jadx (default)
+# 使用 jadx 反编译 APK（默认）
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh app.apk
 
-# Decompile XAPK (auto-extracts and decompiles each APK inside)
+# 反编译 XAPK（自动解包并逐个处理其中的 APK）
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh app-bundle.xapk
 
-# Decompile with Fernflower
+# 使用 Fernflower 反编译
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh --engine fernflower library.jar
 
-# Run both engines and compare
+# 同时运行两个引擎并对比结果
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh --engine both --deobf app.apk
 
-# Find API calls
+# 查找 API 调用
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/ --retrofit
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/ --urls
 ```
 
-## Repository Structure
+## 仓库结构
 
 ```
 android-reverse-engineering-skill/
 ├── .agents/
 │   └── plugins/
-│       └── marketplace.json                # Codex marketplace catalog
+│       └── marketplace.json                # Codex 插件市场目录
 ├── .claude-plugin/
-│   └── marketplace.json                    # Marketplace catalog
+│   └── marketplace.json                    # Claude 插件市场目录
 ├── plugins/
 │   └── android-reverse-engineering/
 │       ├── .codex-plugin/
-│       │   └── plugin.json                 # Codex plugin manifest
+│       │   └── plugin.json                 # Codex 插件清单
 │       ├── .claude-plugin/
-│       │   └── plugin.json                 # Plugin manifest
+│       │   └── plugin.json                 # Claude 插件清单
 │       ├── skills/
 │       │   └── android-reverse-engineering/
-│       │       ├── SKILL.md                # Core workflow (static + dynamic triage)
+│       │       ├── SKILL.md                # 核心流程（静态分析 + 动态侦察）
 │       │       ├── references/
 │       │       │   ├── setup-guide.md
 │       │       │   ├── jadx-usage.md
@@ -161,33 +186,33 @@ android-reverse-engineering-skill/
 │       │           ├── decompile.sh
 │       │           └── find-api-calls.sh
 │       └── commands/
-│           └── decompile.md                # /decompile slash command
+│           └── decompile.md                # /decompile 命令说明
 ├── LICENSE
 └── README.md
 ```
 
-## References
+## 参考项目
 
-- [jadx — Dex to Java decompiler](https://github.com/skylot/jadx)
-- [Fernflower — JetBrains analytical decompiler](https://github.com/JetBrains/fernflower)
-- [Vineflower — Fernflower community fork](https://github.com/Vineflower/vineflower)
-- [dex2jar — DEX to JAR converter](https://github.com/pxb1988/dex2jar)
-- [apktool — Android resource decoder](https://apktool.org/)
-- [Frida — Dynamic instrumentation toolkit](https://frida.re/)
+- [jadx — Dex to Java 反编译器](https://github.com/skylot/jadx)
+- [Fernflower — JetBrains 反编译器](https://github.com/JetBrains/fernflower)
+- [Vineflower — Fernflower 社区分支](https://github.com/Vineflower/vineflower)
+- [dex2jar — DEX 转 JAR 工具](https://github.com/pxb1988/dex2jar)
+- [apktool — Android 资源解码工具](https://apktool.org/)
+- [Frida — 动态插桩工具](https://frida.re/)
 
-## Disclaimer
+## 免责声明
 
-This plugin is provided strictly for **lawful purposes**, including but not limited to:
+这个插件仅可用于**合法用途**，包括但不限于：
 
-- Security research and authorized penetration testing
-- Interoperability analysis permitted under applicable law (e.g., EU Directive 2009/24/EC, US DMCA §1201(f))
-- Malware analysis and incident response
-- Educational use and CTF competitions
+- 安全研究与经授权的渗透测试
+- 适用法律允许范围内的互操作性分析
+- 恶意软件分析与应急响应
+- 教学用途与 CTF 比赛
 
-**You are solely responsible** for ensuring that your use of this tool complies with all applicable laws, regulations, and terms of service. Unauthorized reverse engineering of software you do not own or do not have permission to analyze may violate intellectual property laws and computer fraud statutes in your jurisdiction.
+**你需要自行确保** 对本工具的使用符合所在司法辖区的法律、法规以及目标软件的服务条款。对无授权的软件进行逆向，可能触犯知识产权或计算机相关法律。
 
-The authors disclaim any liability for misuse of this tool.
+作者不对任何滥用行为承担责任。
 
-## License
+## 许可证
 
-Apache 2.0 — see [LICENSE](LICENSE)
+Apache 2.0，见 [LICENSE](LICENSE)
