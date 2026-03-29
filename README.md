@@ -1,4 +1,4 @@
-# Android 逆向与 API 提取
+# android-reverse-engineering-skill
 
 这个仓库同时包含一套 `Claude Code` 插件和一套 `Codex` 插件封装，它们共用同一个 Android 逆向 skill。
 
