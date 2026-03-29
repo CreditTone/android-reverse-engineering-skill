@@ -1,6 +1,8 @@
-# Android Reverse Engineering & API Extraction — Claude Code skill
+# Android Reverse Engineering & API Extraction
 
-A Claude Code skill that decompiles Android APK/XAPK/JAR/AAR files and **extracts the HTTP APIs** used by the app — Retrofit endpoints, OkHttp calls, hardcoded URLs, authentication patterns — so you can document and reproduce them without the original source code.
+This repository includes both a `Claude Code` plugin and a `Codex` plugin wrapper for the same Android reverse-engineering skill.
+
+A Claude Code skill that decompiles Android APK/XAPK/JAR/AAR files, **extracts the HTTP APIs** used by the app, and guides deeper reverse-engineering work such as Frida triage, runtime request inspection, JNI/SO analysis, and sign-location analysis.
 
 ## What it does
 
@@ -9,6 +11,21 @@ A Claude Code skill that decompiles Android APK/XAPK/JAR/AAR files and **extract
 - **Traces call flows** from Activities/Fragments through ViewModels and repositories down to HTTP calls
 - **Analyzes** app structure: manifest, packages, architecture patterns
 - **Handles obfuscated code**: strategies for navigating ProGuard/R8 output
+- **Guides runtime analysis**: when to use Frida, where to hook, and how to narrow the request/sign pipeline
+- **Guides native analysis**: JNI/SO triage, sign-generation boundary identification, and when unidbg is worth the cost
+
+## Frida Scope
+
+The skill now includes documentation for Frida-oriented workflows, but it does **not** yet ship runnable Frida helper scripts or an auto-attach command.
+
+Current state:
+
+- The skill can guide static triage before hooking
+- The skill can tell you which Java or JNI boundary is the best candidate to hook
+- The skill can structure runtime findings and native sign analysis
+- The repository does **not** yet include `scripts/` for `frida`, device attach, or automatic hook generation
+
+In short: the project currently supports **Frida analysis workflow guidance**, not **built-in Frida execution tooling**.
 
 ## Requirements
 
@@ -23,6 +40,17 @@ A Claude Code skill that decompiles Android APK/XAPK/JAR/AAR files and **extract
 See `plugins/android-reverse-engineering/skills/android-reverse-engineering/references/setup-guide.md` for detailed installation instructions.
 
 ## Installation
+
+### For Codex
+
+This repository now includes Codex-compatible plugin metadata:
+
+- `.agents/plugins/marketplace.json`
+- `plugins/android-reverse-engineering/.codex-plugin/plugin.json`
+
+The skill content remains in:
+
+- `plugins/android-reverse-engineering/skills/android-reverse-engineering/`
 
 ### From GitHub (recommended)
 
@@ -67,6 +95,9 @@ The skill activates on phrases like:
 - "Extract API endpoints from this app"
 - "Follow the call flow from LoginActivity"
 - "Analyze this AAR library"
+- "Find where this app generates its sign"
+- "Use Frida to inspect the request pipeline"
+- "Analyze the JNI or SO behind this token"
 
 ### Manual scripts
 
@@ -102,21 +133,28 @@ bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scri
 
 ```
 android-reverse-engineering-skill/
+├── .agents/
+│   └── plugins/
+│       └── marketplace.json                # Codex marketplace catalog
 ├── .claude-plugin/
 │   └── marketplace.json                    # Marketplace catalog
 ├── plugins/
 │   └── android-reverse-engineering/
+│       ├── .codex-plugin/
+│       │   └── plugin.json                 # Codex plugin manifest
 │       ├── .claude-plugin/
 │       │   └── plugin.json                 # Plugin manifest
 │       ├── skills/
 │       │   └── android-reverse-engineering/
-│       │       ├── SKILL.md                # Core workflow (5 phases)
+│       │       ├── SKILL.md                # Core workflow (static + dynamic triage)
 │       │       ├── references/
 │       │       │   ├── setup-guide.md
 │       │       │   ├── jadx-usage.md
 │       │       │   ├── fernflower-usage.md
 │       │       │   ├── api-extraction-patterns.md
-│       │       │   └── call-flow-analysis.md
+│       │       │   ├── call-flow-analysis.md
+│       │       │   ├── dynamic-analysis.md
+│       │       │   └── native-analysis.md
 │       │       └── scripts/
 │       │           ├── check-deps.sh
 │       │           ├── install-dep.sh
@@ -135,6 +173,7 @@ android-reverse-engineering-skill/
 - [Vineflower — Fernflower community fork](https://github.com/Vineflower/vineflower)
 - [dex2jar — DEX to JAR converter](https://github.com/pxb1988/dex2jar)
 - [apktool — Android resource decoder](https://apktool.org/)
+- [Frida — Dynamic instrumentation toolkit](https://frida.re/)
 
 ## Disclaimer
 
