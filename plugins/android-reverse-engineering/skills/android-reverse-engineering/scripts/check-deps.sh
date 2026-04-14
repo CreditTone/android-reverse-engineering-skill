@@ -100,6 +100,15 @@ else
   missing_optional+=("adb")
 fi
 
+# --- Optional: rizin ---
+if command -v rizin &>/dev/null && command -v rz-bin &>/dev/null; then
+  rizin_version=$(rizin -v 2>/dev/null | head -1 || echo "unknown")
+  echo "[OK] $rizin_version detected (optional)"
+else
+  echo "[MISSING] rizin not found (optional — recommended for native .so and JNI analysis)"
+  missing_optional+=("rizin")
+fi
+
 # --- Machine-readable summary ---
 echo
 if [[ ${#missing_required[@]} -gt 0 ]]; then

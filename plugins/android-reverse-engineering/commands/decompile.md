@@ -37,7 +37,7 @@ bash skills/android-reverse-engineering/scripts/install-dep.sh jadx
 
 The install script auto-detects the OS and installs without sudo when possible (user-local install to `~/.local/`). If sudo is needed, it will prompt — if the user declines or sudo is unavailable, the script prints exact manual instructions (exit code 2). Show those instructions to the user and stop.
 
-**For optional dependencies** (`INSTALL_OPTIONAL:vineflower`, `INSTALL_OPTIONAL:dex2jar`, etc.), ask the user if they want to install them. Recommend vineflower and dex2jar for better results.
+**For optional dependencies** (`INSTALL_OPTIONAL:vineflower`, `INSTALL_OPTIONAL:dex2jar`, `INSTALL_OPTIONAL:rizin`, etc.), ask the user if they want to install them. Recommend vineflower and dex2jar for better decompilation results, and recommend rizin when JNI or `.so` analysis is likely.
 
 After any installations, re-run `check-deps.sh` to verify. Do not proceed until all required dependencies pass.
 
@@ -87,5 +87,34 @@ Tell the user what they can do next:
 - **Re-decompile with Fernflower**: If jadx output has warnings, offer to re-run with `--engine both` for comparison
 - **Triage runtime analysis**: "I can identify the best Frida hook point or request/sign boundary before any dynamic work"
 - **Inspect JNI/sign logic**: "I can determine whether the token or sign is generated in Java or native code"
+- **Inspect native `.so` files**: "I can use rizin to list JNI exports, inspect `JNI_OnLoad`, and export function disassembly"
+
+## `.so` / Rizin Follow-up
+
+If the user wants native analysis after decompilation, use `rizin` first when available:
+
+```bash
+rz-bin -I libfoo.so
+rz-bin -s libfoo.so
+rz-bin -i libfoo.so
+rz-strings -a libfoo.so | rg 'http|https|Java_|JNI_OnLoad|RegisterNatives|encrypt|sign|ssl|socket'
+rizin -qc "aaa; afl; q" libfoo.so
+rizin -qc "aaa; pdf @ sym.JNI_OnLoad; q" libfoo.so
+```
+
+To save disassembly to a local file:
+
+```bash
+rizin -qc "aaa; pdf @ sym.JNI_OnLoad; q" libfoo.so > JNI_OnLoad.asm
+```
+
+If `rizin` is unavailable, fall back to:
+
+```bash
+readelf -Ws libfoo.so
+nm -D libfoo.so | rg 'JNI_OnLoad|Java_|RegisterNatives'
+objdump -d libfoo.so > libfoo.objdump.asm
+strings -a libfoo.so | rg 'http|https|encrypt|sign|socket'
+```
 
 Refer to the full skill documentation in `skills/android-reverse-engineering/SKILL.md` for the complete workflow.

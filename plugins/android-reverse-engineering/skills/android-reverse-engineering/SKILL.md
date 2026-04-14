@@ -21,7 +21,7 @@ Use dynamic analysis only to confirm or bridge gaps that static analysis cannot 
 
 ## Prerequisites
 
-This skill requires **Java JDK 17+** and **jadx** to be installed. **Fernflower/Vineflower** and **dex2jar** are optional but recommended for better decompilation quality. Run the dependency checker to verify:
+This skill requires **Java JDK 17+** and **jadx** to be installed. **Fernflower/Vineflower**, **dex2jar**, and **rizin** are optional but recommended for better decompilation quality and native `.so` analysis. Run the dependency checker to verify:
 
 ```bash
 bash skills/android-reverse-engineering/scripts/check-deps.sh
@@ -56,7 +56,7 @@ The install script detects the OS and package manager, then:
 - Uses sudo and the system package manager when necessary (apt, dnf, pacman)
 - If sudo is needed but unavailable or the user declines, it prints the exact manual command and exits with code 2 — show these instructions to the user
 
-**For optional dependencies**, ask the user if they want to install them. Vineflower and dex2jar are recommended for best results.
+**For optional dependencies**, ask the user if they want to install them. Vineflower and dex2jar are recommended for best results. Rizin is recommended when JNI or `.so` inspection is likely.
 
 After installation, re-run `check-deps.sh` to confirm everything is in place. Do not proceed to Phase 2 until all required dependencies are OK.
 
@@ -227,6 +227,51 @@ Focus on answering these questions:
 - What are the exact inputs to the signing function?
 - Which inputs are stable constants vs runtime values such as timestamp, cookie, device ID, or request body?
 - Can the algorithm be replayed by calling the app, or must it be reimplemented?
+
+**Preferred CLI for `.so` analysis**:
+
+- `rizin` / `rz-bin` first when available
+- Fall back to `readelf`, `nm`, `objdump`, and `strings` if rizin is unavailable
+
+**Recommended `.so` command set**:
+
+```bash
+# Basic file identity
+file libfoo.so
+
+# ELF metadata, imports/exports, sections
+rz-bin -I libfoo.so
+rz-bin -s libfoo.so
+rz-bin -i libfoo.so
+rz-bin -E libfoo.so
+
+# Fast string triage
+rz-strings -a libfoo.so | rg 'http|https|Java_|JNI_OnLoad|RegisterNatives|encrypt|sign|ssl|socket'
+
+# Function list and disassembly
+rizin -qc "aaa; afl; q" libfoo.so
+rizin -qc "aaa; pdf @ sym.JNI_OnLoad; q" libfoo.so
+rizin -qc "aaa; pdr @ sym.JNI_OnLoad; q" libfoo.so
+```
+
+**Useful fallbacks without rizin**:
+
+```bash
+readelf -d libfoo.so
+readelf -Ws libfoo.so
+nm -D libfoo.so | rg 'Java_|JNI_OnLoad|RegisterNatives'
+objdump -T libfoo.so
+objdump -d libfoo.so > libfoo.objdump.asm
+strings -a libfoo.so | rg 'http|https|Java_|JNI_OnLoad|RegisterNatives|encrypt|sign|ssl|socket'
+```
+
+**Default `.so` workflow**:
+
+1. Identify architecture and linked libraries with `file` and `rz-bin -I`
+2. Check exports/imports for `JNI_OnLoad`, `Java_*`, and crypto or socket APIs
+3. Search strings for URLs, hostnames, log tags, and registration clues
+4. Inspect `JNI_OnLoad` first, then look for `RegisterNatives` targets
+5. Only do deep function reversing after the Java-side call path is known
 
 ## Output
 

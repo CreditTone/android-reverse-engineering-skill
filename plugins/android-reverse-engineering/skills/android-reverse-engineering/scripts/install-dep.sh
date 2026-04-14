@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # install-dep.sh — Install a single dependency for Android reverse engineering
 # Usage: install-dep.sh <dependency>
-# Dependencies: java, jadx, vineflower, dex2jar, apktool, adb
+# Dependencies: java, jadx, vineflower, dex2jar, apktool, adb, rizin
 #
 # Exit codes:
 #   0 — installed successfully
@@ -22,6 +22,7 @@ Available dependencies:
   dex2jar      DEX to JAR converter
   apktool      Android resource decoder
   adb          Android Debug Bridge
+  rizin        Native .so analysis toolkit (rizin, rz-bin, rz-strings)
 
 The script detects your OS and package manager, then:
   - Installs directly if possible (brew, or user-local install)
@@ -429,6 +430,28 @@ install_adb() {
   fi
 }
 
+install_rizin() {
+  if command -v rizin &>/dev/null && command -v rz-bin &>/dev/null; then
+    ok "rizin already installed: $(rizin -v 2>/dev/null | head -1 || echo 'unknown')"
+    return 0
+  fi
+
+  case "$PKG_MANAGER" in
+    brew)    info "Installing rizin via Homebrew..."; brew install rizin ;;
+    apt)     pkg_install "rizin" ;;
+    dnf)     pkg_install "rizin" ;;
+    pacman)  pkg_install "rizin" ;;
+    *)       manual "Install rizin from https://rizin.re/ or your system package manager" ;;
+  esac
+
+  if command -v rizin &>/dev/null && command -v rz-bin &>/dev/null; then
+    ok "rizin installed: $(rizin -v 2>/dev/null | head -1 || echo 'unknown')"
+  else
+    fail "rizin installation may have failed."
+    exit 1
+  fi
+}
+
 # =====================================================================
 # Dispatch
 # =====================================================================
@@ -440,9 +463,10 @@ case "$DEP" in
   dex2jar)     install_dex2jar ;;
   apktool)     install_apktool ;;
   adb)         install_adb ;;
+  rizin)       install_rizin ;;
   *)
     echo "Error: Unknown dependency '$DEP'" >&2
-    echo "Available: java, jadx, vineflower, dex2jar, apktool, adb" >&2
+    echo "Available: java, jadx, vineflower, dex2jar, apktool, adb, rizin" >&2
     exit 1
     ;;
 esac

@@ -61,6 +61,7 @@
 
 - [Vineflower](https://github.com/Vineflower/vineflower) 或 [Fernflower](https://github.com/JetBrains/fernflower)，用于在复杂 Java 代码上获得更好的反编译结果
 - [dex2jar](https://github.com/pxb1988/dex2jar)，用于在 APK/DEX 场景下配合 Fernflower 工作
+- [Rizin](https://rizin.re/)，用于 `.so` / JNI / Native 导出符号与反汇编分析
 
 详细安装说明见 `plugins/android-reverse-engineering/skills/android-reverse-engineering/references/setup-guide.md`。
 
@@ -135,6 +136,7 @@ bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scri
 # 安装缺失依赖（自动识别操作系统和包管理器）
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.sh jadx
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.sh vineflower
+bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.sh rizin
 
 # 使用 jadx 反编译 APK（默认）
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh app.apk
@@ -158,6 +160,47 @@ bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scri
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/ --retrofit
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/ --urls
+```
+
+## `.so` / Rizin 用法
+
+当静态 Java 分析已经看到 `native` 方法、`System.loadLibrary(...)`、JNI 注册，或者怀疑签名/加密逻辑落在 `.so` 里时，推荐先用 `rizin` 做一轮轻量侦察。
+
+常用命令：
+
+```bash
+# 查看 ELF 基本信息、架构、入口、依赖
+rz-bin -I libfoo.so
+
+# 查看导出符号 / 导入符号
+rz-bin -s libfoo.so
+rz-bin -i libfoo.so
+
+# 搜字符串（URL、JNI、签名、socket 等）
+rz-strings -a libfoo.so | rg 'http|https|Java_|JNI_OnLoad|RegisterNatives|encrypt|sign|ssl|socket'
+
+# 列函数、看 JNI_OnLoad 反汇编
+rizin -qc "aaa; afl; q" libfoo.so
+rizin -qc "aaa; pdf @ sym.JNI_OnLoad; q" libfoo.so
+
+# 导出某个函数的反汇编到本地文件
+rizin -qc "aaa; pdf @ sym.JNI_OnLoad; q" libfoo.so > JNI_OnLoad.asm
+```
+
+如果只想快速确认 JNI 边界，通常先看这几样就够了：
+
+```bash
+rz-bin -s libfoo.so | rg 'JNI_OnLoad|Java_|RegisterNatives'
+rz-strings -a libfoo.so | rg 'http|https|encrypt|sign|socket'
+```
+
+如果 `rizin` 不可用，也可以回退到系统工具：
+
+```bash
+readelf -Ws libfoo.so
+nm -D libfoo.so | rg 'JNI_OnLoad|Java_|RegisterNatives'
+objdump -d libfoo.so > libfoo.objdump.asm
+strings -a libfoo.so | rg 'http|https|encrypt|sign|socket'
 ```
 
 ## 反编译命名策略
@@ -218,6 +261,7 @@ android-reverse-engineering-skill/
 - [Vineflower — Fernflower 社区分支](https://github.com/Vineflower/vineflower)
 - [dex2jar — DEX 转 JAR 工具](https://github.com/pxb1988/dex2jar)
 - [apktool — Android 资源解码工具](https://apktool.org/)
+- [Rizin — 开源二进制逆向工具链](https://rizin.re/)
 - [Frida — 动态插桩工具](https://frida.re/)
 
 ## 免责声明

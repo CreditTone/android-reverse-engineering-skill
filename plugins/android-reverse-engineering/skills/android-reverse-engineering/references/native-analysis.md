@@ -20,6 +20,83 @@ Identify:
 - the target SO file name
 - whether JNI is static (`Java_*` exports) or dynamic (`JNI_OnLoad`, `RegisterNatives`)
 
+## Rizin Command Template
+
+Prefer `rizin` / `rz-bin` for the first pass when available. It is a good fit for lightweight JNI and `.so` triage before deeper reversing.
+
+### 1. Basic ELF triage
+
+```bash
+file libfoo.so
+rz-bin -I libfoo.so
+rz-bin -s libfoo.so
+rz-bin -i libfoo.so
+rz-bin -E libfoo.so
+```
+
+What to look for:
+
+- architecture and bitness
+- linked libraries
+- exported `Java_*` symbols
+- whether `JNI_OnLoad` is present
+- suspicious imports such as crypto, socket, SSL, compression, or logging APIs
+
+### 2. String search
+
+```bash
+rz-strings -a libfoo.so | rg 'http|https|Java_|JNI_OnLoad|RegisterNatives|encrypt|sign|ssl|socket'
+```
+
+Useful targets:
+
+- URL or host fragments
+- `RegisterNatives`
+- log tags
+- error strings
+- crypto or signing hints
+
+### 3. Function inventory and JNI entrypoints
+
+```bash
+rizin -qc "aaa; afl; q" libfoo.so
+rizin -qc "aaa; afl~JNI; q" libfoo.so
+rizin -qc "aaa; pdf @ sym.JNI_OnLoad; q" libfoo.so
+rizin -qc "aaa; pdr @ sym.JNI_OnLoad; q" libfoo.so
+```
+
+Use this to answer:
+
+- does the library export JNI functions directly?
+- does `JNI_OnLoad` register methods dynamically?
+- which functions are worth hooking first?
+
+### 4. Save disassembly to local files
+
+```bash
+rizin -qc "aaa; pdf @ sym.JNI_OnLoad; q" libfoo.so > JNI_OnLoad.asm
+rizin -qc "aaa; pdr @ sym.JNI_OnLoad; q" libfoo.so > JNI_OnLoad.pseudo.c
+```
+
+For a specific function:
+
+```bash
+rizin -qc "aaa; pdf @ sym.Java_com_example_Signer_getSign; q" libfoo.so > getSign.asm
+```
+
+### 5. Fallback without rizin
+
+```bash
+readelf -d libfoo.so
+readelf -Ws libfoo.so
+nm -D libfoo.so | rg 'Java_|JNI_OnLoad|RegisterNatives'
+objdump -T libfoo.so
+objdump -d libfoo.so > libfoo.objdump.asm
+strings -a libfoo.so | rg 'http|https|Java_|JNI_OnLoad|RegisterNatives|encrypt|sign|ssl|socket'
+```
+
+Use the fallback path when `rizin` is unavailable or when you only need quick confirmation of JNI exports and suspicious strings.
+
 ## Questions to Answer
 
 - What native method generates the value of interest?
