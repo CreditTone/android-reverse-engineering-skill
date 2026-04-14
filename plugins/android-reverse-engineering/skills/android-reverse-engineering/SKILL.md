@@ -74,7 +74,7 @@ For **XAPK** files (ZIP bundles containing multiple APKs, used by APKPure and si
 
 Options:
 - `-o <dir>` — Custom output directory (default: `<filename>-decompiled`)
-- `--deobf` — Enable deobfuscation (recommended for obfuscated apps)
+- `--deobf` — Enable deobfuscation of names when readability matters more than runtime class fidelity
 - `--no-res` — Skip resources, decompile code only (faster)
 - `--engine ENGINE` — `jadx` (default), `fernflower`, or `both`
 
@@ -82,11 +82,13 @@ Options:
 
 | Situation | Engine |
 |---|---|
-| First pass on any APK | `jadx` (fastest, handles resources) |
+| First pass on any APK | `jadx` (fastest, handles resources; keep original runtime class names by default) |
 | JAR/AAR library analysis | `fernflower` (better Java output) |
 | jadx output has warnings/broken code | `both` (compare and pick best per class) |
 | Complex lambdas, generics, streams | `fernflower` |
 | Quick overview of a large APK | `jadx --no-res` |
+| You need Frida/JNI/unidbg/runtime class names | `jadx` without `--deobf` |
+| You only need readability for heavily obfuscated code | `jadx --deobf` |
 
 When using `--engine both`, the outputs go into `<output>/jadx/` and `<output>/fernflower/` respectively, with a comparison summary at the end showing file counts and jadx warning counts. Review classes with jadx warnings in the Fernflower output for better code.
 
@@ -136,6 +138,7 @@ Follow execution paths from user-facing entry points down to network calls.
 4. **Map DI bindings** (if Dagger/Hilt is used): Find `@Module` classes to understand which implementations are provided for which interfaces.
 
 5. **Handle obfuscated code**: When class names are mangled, use string literals and library API calls as anchors. Retrofit annotations and URL strings are never obfuscated.
+6. **Prefer runtime-faithful names for hooks/emulation**: Do the first jadx pass without `--deobf` whenever the next step may involve Frida, JNI `FindClass`, unidbg, or runtime class loading. `--deobf` can generate readable aliases that are useful for source navigation but are not guaranteed to exist at runtime.
 
 See `skills/android-reverse-engineering/references/call-flow-analysis.md` for detailed techniques and grep commands.
 

@@ -33,7 +33,7 @@
 - 提取并整理 API：Retrofit 接口、OkHttp 调用、硬编码 URL、鉴权头和 token
 - 从 Activity/Fragment 沿着 ViewModel、Repository 一路跟踪到 HTTP 调用
 - 分析应用结构：Manifest、包结构、架构模式
-- 处理混淆代码：提供在 ProGuard/R8 输出中定位逻辑的策略
+- 处理混淆代码：提供在 ProGuard/R8 输出中定位逻辑的策略，并区分“运行时真实类名”与“反编译器可读别名”
 - 提供运行时分析指引：什么时候该用 Frida、该 hook 哪一层、如何收窄请求/签名链路
 - 提供 Native 分析指引：JNI/SO 侦察、签名生成边界识别，以及什么时候值得上 unidbg
 
@@ -139,6 +139,12 @@ bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scri
 # 使用 jadx 反编译 APK（默认）
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh app.apk
 
+# 需要保留运行时真实类名时，第一次反编译建议不要加 --deobf
+bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh app.apk
+
+# 只在更重视源码可读性时再启用 --deobf
+bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh --deobf app.apk
+
 # 反编译 XAPK（自动解包并逐个处理其中的 APK）
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh app-bundle.xapk
 
@@ -153,6 +159,20 @@ bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scri
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/ --retrofit
 bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/ --urls
 ```
+
+## 反编译命名策略
+
+默认建议先使用 **不带 `--deobf`** 的 `jadx` 做第一轮反编译，原因是：
+
+- 更接近 dex 里的运行时类名
+- 更适合 Frida、JNI `FindClass`、unidbg、运行时 `Class.forName`
+- 避免把只存在于反编译结果中的可读别名误当成运行时类名
+
+`--deobf` 仍然有价值，但更适合这些场景：
+
+- 代码高度混淆，只想先提升阅读体验
+- 当前任务以静态阅读为主，不需要马上做运行时 hook
+- 想用第二份输出和原始命名版本对照分析
 
 ## 仓库结构
 

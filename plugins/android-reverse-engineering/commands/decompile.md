@@ -60,7 +60,9 @@ Run the decompile script on the target file. Choose the engine based on the inpu
   bash skills/android-reverse-engineering/scripts/decompile.sh --engine both <file>
   ```
 
-For obfuscated apps (if the user mentions it or you detect single-letter package names), add `--deobf`:
+If the next step may involve Frida, JNI `FindClass`, unidbg, or runtime class loading, keep the first pass **without** `--deobf` so class names stay closer to dex/runtime names.
+
+Only add `--deobf` when readability matters more than runtime class fidelity:
 
 ```bash
 bash skills/android-reverse-engineering/scripts/decompile.sh --deobf <file>
