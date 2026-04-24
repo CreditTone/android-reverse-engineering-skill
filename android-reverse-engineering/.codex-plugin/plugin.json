@@ -1,5 +1,5 @@
 {
-  "name": "android-reverse-engineering",
+  "name": "android-reverse-engineering-skill",
   "version": "1.0.0",
   "description": "Decompile Android APK/JAR/AAR packages, trace call flows, and extract documented HTTP APIs.",
   "author": {
