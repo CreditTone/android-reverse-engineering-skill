@@ -1,8 +1,6 @@
 # android-reverse-engineering-skill
 
-这个仓库同时包含一套 `Claude Code` 插件和一套 `Codex` 插件封装，它们共用同一个 Android 逆向 skill。
-
-这是一个用于 Claude Code 的技能，能够反编译 Android APK/XAPK/JAR/AAR 文件，**提取应用使用的 HTTP API**，并为更深入的逆向分析提供方法指引，例如 Frida 前期侦察、运行时请求检查、JNI/SO 分析，以及签名定位分析。
+这是一套专为 Codex 适配的 Android 逆向分析 skill，支持在 Codex 会话中反编译 APK、XAPK、JAR、AAR，并结合 jadx、Fernflower/Vineflower 梳理 Manifest、包结构、网络层和调用链。它可辅助提取接口、URL、鉴权头、token 与签名逻辑，并提供 Frida、抓包、JNI/SO 分析前的静态侦察方法，适合接口分 析、安全研究和授权测试。
 
 ## 项目来源
 
@@ -78,29 +76,6 @@ skill 的主体内容位于：
 
 - `plugins/android-reverse-engineering/skills/android-reverse-engineering/`
 
-### 从 GitHub 安装（推荐）
-
-在 Claude Code 中运行：
-
-```
-/plugin marketplace add SimoneAvogadro/android-reverse-engineering-skill
-/plugin install android-reverse-engineering@android-reverse-engineering-skill
-```
-
-安装后，这个 skill 会在之后的会话中持续可用。
-
-### 从本地仓库安装
-
-```bash
-git clone https://github.com/SimoneAvogadro/android-reverse-engineering-skill.git
-```
-
-然后在 Claude Code 中运行：
-
-```
-/plugin marketplace add /path/to/android-reverse-engineering-skill
-/plugin install android-reverse-engineering@android-reverse-engineering-skill
-```
 
 ## 使用方式
 
