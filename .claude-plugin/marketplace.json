@@ -12,7 +12,7 @@
   "plugins": [
     {
       "name": "android-reverse-engineering",
-      "source": "./plugins/android-reverse-engineering",
+      "source": "./android-reverse-engineering",
       "description": "Decompile Android APK/JAR/AAR with jadx, trace call flows through libraries, and document extracted APIs.",
       "version": "1.0.0",
       "author": {

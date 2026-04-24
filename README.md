@@ -61,20 +61,21 @@
 - [dex2jar](https://github.com/pxb1988/dex2jar)，用于在 APK/DEX 场景下配合 Fernflower 工作
 - [Rizin](https://rizin.re/)，用于 `.so` / JNI / Native 导出符号与反汇编分析
 
-详细安装说明见 `plugins/android-reverse-engineering/skills/android-reverse-engineering/references/setup-guide.md`。
+详细安装说明见 `android-reverse-engineering/skills/android-reverse-engineering/references/setup-guide.md`。
 
 ## 安装
 
 ### 用于 Codex
 
-这个仓库已经包含 Codex 兼容的插件元数据：
+这个仓库已经包含 Claude/Codex 兼容的插件元数据：
 
-- `.agents/plugins/marketplace.json`
-- `plugins/android-reverse-engineering/.codex-plugin/plugin.json`
+- `.claude-plugin/marketplace.json`
+- `android-reverse-engineering/.claude-plugin/plugin.json`
+- `android-reverse-engineering/.codex-plugin/plugin.json`
 
 skill 的主体内容位于：
 
-- `plugins/android-reverse-engineering/skills/android-reverse-engineering/`
+- `android-reverse-engineering/skills/android-reverse-engineering/`
 
 
 ## 使用方式
@@ -106,35 +107,35 @@ skill 的主体内容位于：
 
 ```bash
 # 检查依赖
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/check-deps.sh
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/check-deps.sh
 
 # 安装缺失依赖（自动识别操作系统和包管理器）
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.sh jadx
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.sh vineflower
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.sh rizin
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.sh jadx
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.sh vineflower
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.sh rizin
 
 # 使用 jadx 反编译 APK（默认）
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh app.apk
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh app.apk
 
 # 需要保留运行时真实类名时，第一次反编译建议不要加 --deobf
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh app.apk
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh app.apk
 
 # 只在更重视源码可读性时再启用 --deobf
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh --deobf app.apk
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh --deobf app.apk
 
 # 反编译 XAPK（自动解包并逐个处理其中的 APK）
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh app-bundle.xapk
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh app-bundle.xapk
 
 # 使用 Fernflower 反编译
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh --engine fernflower library.jar
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh --engine fernflower library.jar
 
 # 同时运行两个引擎并对比结果
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh --engine both --deobf app.apk
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.sh --engine both --deobf app.apk
 
 # 查找 API 调用
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/ --retrofit
-bash plugins/android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/ --urls
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/ --retrofit
+bash android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/ --urls
 ```
 
 ## `.so` / Rizin 用法
@@ -196,35 +197,31 @@ strings -a libfoo.so | rg 'http|https|encrypt|sign|socket'
 
 ```
 android-reverse-engineering-skill/
-├── .agents/
-│   └── plugins/
-│       └── marketplace.json                # Codex 插件市场目录
 ├── .claude-plugin/
 │   └── marketplace.json                    # Claude 插件市场目录
-├── plugins/
-│   └── android-reverse-engineering/
-│       ├── .codex-plugin/
-│       │   └── plugin.json                 # Codex 插件清单
-│       ├── .claude-plugin/
-│       │   └── plugin.json                 # Claude 插件清单
-│       ├── skills/
-│       │   └── android-reverse-engineering/
-│       │       ├── SKILL.md                # 核心流程（静态分析 + 动态侦察）
-│       │       ├── references/
-│       │       │   ├── setup-guide.md
-│       │       │   ├── jadx-usage.md
-│       │       │   ├── fernflower-usage.md
-│       │       │   ├── api-extraction-patterns.md
-│       │       │   ├── call-flow-analysis.md
-│       │       │   ├── dynamic-analysis.md
-│       │       │   └── native-analysis.md
-│       │       └── scripts/
-│       │           ├── check-deps.sh
-│       │           ├── install-dep.sh
-│       │           ├── decompile.sh
-│       │           └── find-api-calls.sh
-│       └── commands/
-│           └── decompile.md                # /decompile 命令说明
+├── android-reverse-engineering/
+│   ├── .codex-plugin/
+│   │   └── plugin.json                     # Codex 插件清单
+│   ├── .claude-plugin/
+│   │   └── plugin.json                     # Claude 插件清单
+│   ├── skills/
+│   │   └── android-reverse-engineering/
+│   │       ├── SKILL.md                    # 核心流程（静态分析 + 动态侦察）
+│   │       ├── references/
+│   │       │   ├── setup-guide.md
+│   │       │   ├── jadx-usage.md
+│   │       │   ├── fernflower-usage.md
+│   │       │   ├── api-extraction-patterns.md
+│   │       │   ├── call-flow-analysis.md
+│   │       │   ├── dynamic-analysis.md
+│   │       │   └── native-analysis.md
+│   │       └── scripts/
+│   │           ├── check-deps.sh
+│   │           ├── install-dep.sh
+│   │           ├── decompile.sh
+│   │           └── find-api-calls.sh
+│   └── commands/
+│       └── decompile.md                    # /decompile 命令说明
 ├── LICENSE
 └── README.md
 ```

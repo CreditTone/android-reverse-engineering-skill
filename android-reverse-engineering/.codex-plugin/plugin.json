@@ -1,0 +1,42 @@
+{
+  "name": "android-reverse-engineering",
+  "version": "1.0.0",
+  "description": "Decompile Android APK/JAR/AAR packages, trace call flows, and extract documented HTTP APIs.",
+  "author": {
+    "name": "Simone Avogadro",
+    "url": "https://github.com/SimoneAvogadro"
+  },
+  "homepage": "https://github.com/SimoneAvogadro/android-reverse-engineering-skill",
+  "repository": "https://github.com/SimoneAvogadro/android-reverse-engineering-skill",
+  "license": "Apache-2.0",
+  "keywords": [
+    "android",
+    "reverse-engineering",
+    "apk",
+    "jadx",
+    "decompile",
+    "api-extraction"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Android Reverse Engineering",
+    "shortDescription": "Decompile Android packages and map app APIs from binaries",
+    "longDescription": "Use Android Reverse Engineering to decompile APK, XAPK, JAR, and AAR artifacts, inspect app structure, trace execution paths, and document extracted HTTP APIs and authentication patterns.",
+    "developerName": "Simone Avogadro",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "websiteURL": "https://github.com/SimoneAvogadro/android-reverse-engineering-skill",
+    "privacyPolicyURL": "https://github.com/SimoneAvogadro/android-reverse-engineering-skill",
+    "termsOfServiceURL": "https://github.com/SimoneAvogadro/android-reverse-engineering-skill",
+    "defaultPrompt": [
+      "Decompile this APK and summarize its architecture",
+      "Extract Retrofit and OkHttp endpoints from this Android app",
+      "Trace the call flow from LoginActivity to the network layer"
+    ],
+    "brandColor": "#3DDC84",
+    "screenshots": []
+  }
+}
