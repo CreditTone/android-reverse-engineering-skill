@@ -1,7 +1,7 @@
 ---
 name: android-reverse-engineering
 description: Decompile Android APK, XAPK, JAR, and AAR files using jadx or Fernflower/Vineflower. Reverse engineer Android apps, extract HTTP API endpoints, trace call flows from UI to network layer, and analyze runtime behavior with Frida, network capture, JNI/SO inspection, and signature generation. Use when the user wants to decompile, analyze, hook, inspect network traffic, bypass SSL pinning for analysis, locate crypto or signing logic, or follow call flows in Android packages.
-trigger: decompile APK|decompile XAPK|reverse engineer Android|extract API|analyze Android|jadx|fernflower|vineflower|follow call flow|decompile JAR|decompile AAR|Android reverse engineering|find API endpoints|frida|hook android|ssl pinning|network capture|android packet capture|jni|so analysis|sign analysis|signature generation|unidbg
+trigger: decompile APK|decompile XAPK|reverse engineer Android|extract API|analyze Android|jadx|fernflower|vineflower|follow call flow|decompile JAR|decompile AAR|Android reverse engineering|find API endpoints|frida|hook android|ssl pinning|network capture|android packet capture|jni|so analysis|sign analysis|signature generation|unidbg|反编译APK|安卓逆向|提取API|分析安卓应用|反编译安卓|逆向工程|追踪调用链|提取接口
 ---
 
 # Android Reverse Engineering
@@ -27,6 +27,12 @@ This skill requires **Java JDK 17+** and **jadx** to be installed. **Fernflower/
 bash skills/android-reverse-engineering/scripts/check-deps.sh
 ```
 
+On Windows (PowerShell):
+
+```powershell
+& "skills/android-reverse-engineering/scripts/check-deps.ps1"
+```
+
 If anything is missing, follow the installation instructions in `skills/android-reverse-engineering/references/setup-guide.md`.
 
 ## Workflow
@@ -41,6 +47,12 @@ Before decompiling, confirm that the required tools are available — and instal
 bash skills/android-reverse-engineering/scripts/check-deps.sh
 ```
 
+On Windows (PowerShell):
+
+```powershell
+& "skills/android-reverse-engineering/scripts/check-deps.ps1"
+```
+
 The output contains machine-readable lines:
 - `INSTALL_REQUIRED:<dep>` — must be installed before proceeding
 - `INSTALL_OPTIONAL:<dep>` — recommended but not blocking
@@ -51,10 +63,22 @@ The output contains machine-readable lines:
 bash skills/android-reverse-engineering/scripts/install-dep.sh <dep>
 ```
 
+On Windows (PowerShell):
+
+```powershell
+& "skills/android-reverse-engineering/scripts/install-dep.ps1" <dep>
+```
+
 The install script detects the OS and package manager, then:
 - Installs without sudo when possible (downloads to `~/.local/share/`, symlinks in `~/.local/bin/`)
 - Uses sudo and the system package manager when necessary (apt, dnf, pacman)
 - If sudo is needed but unavailable or the user declines, it prints the exact manual command and exits with code 2 — show these instructions to the user
+
+Windows notes:
+
+- The PowerShell install script prefers `winget`, then `scoop`, then `choco`
+- If no package manager is available, it falls back to downloading into `%USERPROFILE%\.local\share\`
+- `check-deps.ps1` and `decompile.ps1` refresh PATH from the user environment, so newly installed tools can usually be found without restarting the terminal
 
 **For optional dependencies**, ask the user if they want to install them. Vineflower and dex2jar are recommended for best results. Rizin is recommended when JNI or `.so` inspection is likely.
 
@@ -70,7 +94,15 @@ Use the decompile wrapper script to process the target file. The script supports
 bash skills/android-reverse-engineering/scripts/decompile.sh [OPTIONS] <file>
 ```
 
+On Windows (PowerShell):
+
+```powershell
+& "skills/android-reverse-engineering/scripts/decompile.ps1" [OPTIONS] <file>
+```
+
 For **XAPK** files (ZIP bundles containing multiple APKs, used by APKPure and similar stores): the script automatically extracts the archive, identifies all APK files inside (base + split APKs), and decompiles each one into a separate subdirectory. The XAPK manifest is copied to the output for reference.
+
+For **split/bundled APK wrappers**: if the outer APK produces very few Java files but contains `base.apk` and `split_config.*.apk` files inside its resources, the decompile script automatically detects that the outer APK is only a thin wrapper, re-decompiles `base.apk` into `<output>/base/`, skips config-only splits, and reports the real source location.
 
 Options:
 - `-o <dir>` — Custom output directory (default: `<filename>-decompiled`)
@@ -152,6 +184,12 @@ Find all API endpoints and produce structured documentation.
 bash skills/android-reverse-engineering/scripts/find-api-calls.sh <output>/sources/
 ```
 
+On Windows (PowerShell):
+
+```powershell
+& "skills/android-reverse-engineering/scripts/find-api-calls.ps1" <output>/sources/
+```
+
 Targeted searches:
 ```bash
 # Only Retrofit
@@ -162,6 +200,19 @@ bash skills/android-reverse-engineering/scripts/find-api-calls.sh <output>/sourc
 
 # Only auth patterns
 bash skills/android-reverse-engineering/scripts/find-api-calls.sh <output>/sources/ --auth
+```
+
+On Windows (PowerShell):
+
+```powershell
+# Only Retrofit
+& "skills/android-reverse-engineering/scripts/find-api-calls.ps1" <output>/sources/ -Retrofit
+
+# Only hardcoded URLs
+& "skills/android-reverse-engineering/scripts/find-api-calls.ps1" <output>/sources/ -Urls
+
+# Only auth patterns
+& "skills/android-reverse-engineering/scripts/find-api-calls.ps1" <output>/sources/ -Auth
 ```
 
 Then, for each discovered endpoint, read the surrounding source code to extract:

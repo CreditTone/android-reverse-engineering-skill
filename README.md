@@ -2,6 +2,8 @@
 
 这是一套专为 Codex 适配的 Android 逆向分析 skill，支持在 Codex 会话中反编译 APK、XAPK、JAR、AAR，并结合 jadx、Fernflower/Vineflower 梳理 Manifest、包结构、网络层和调用链。它可辅助提取接口、URL、鉴权头、token 与签名逻辑，并提供 Frida、抓包、JNI/SO 分析前的静态侦察方法，适合接口分 析、安全研究和授权测试。
 
+> **Windows / PowerShell 支持（实验性）**：仓库现在包含与 Bash 脚本对应的 `*.ps1` 脚本，可在 Windows 环境下执行依赖检查、安装、反编译和 API 搜索流程。
+
 ## 项目来源
 
 本项目基于原项目 [SimoneAvogadro/android-reverse-engineering-skill](https://github.com/SimoneAvogadro/android-reverse-engineering-skill) 演化而来。
@@ -138,6 +140,32 @@ bash android-reverse-engineering/skills/android-reverse-engineering/scripts/find
 bash android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.sh output/sources/ --urls
 ```
 
+Windows / PowerShell 对应写法：
+
+```powershell
+# 检查依赖
+& "android-reverse-engineering/skills/android-reverse-engineering/scripts/check-deps.ps1"
+
+# 安装缺失依赖
+& "android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.ps1" jadx
+& "android-reverse-engineering/skills/android-reverse-engineering/scripts/install-dep.ps1" vineflower
+
+# 反编译
+& "android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.ps1" app.apk
+& "android-reverse-engineering/skills/android-reverse-engineering/scripts/decompile.ps1" -Engine both -Deobf app.apk
+
+# 查找 API 调用
+& "android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.ps1" output/sources/
+& "android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.ps1" output/sources/ -Retrofit
+& "android-reverse-engineering/skills/android-reverse-engineering/scripts/find-api-calls.ps1" output/sources/ -Urls
+```
+
+关于分包 / 套壳 APK 的补充：
+
+- 如果外层 APK 本身只反编译出很少的 Java 文件，但 `resources/` 里带有 `base.apk` 和 `split_config.*.apk`
+- `decompile.sh` / `decompile.ps1` 会自动识别这种 bundled APK 包装形式
+- 脚本会继续反编译真正承载业务代码的 `base.apk`，并把主要输出放到 `<output>/base/`
+
 ## `.so` / Rizin 用法
 
 当静态 Java 分析已经看到 `native` 方法、`System.loadLibrary(...)`、JNI 注册，或者怀疑签名/加密逻辑落在 `.so` 里时，推荐先用 `rizin` 做一轮轻量侦察。
@@ -217,9 +245,13 @@ android-reverse-engineering-skill/
 │   │       │   └── native-analysis.md
 │   │       └── scripts/
 │   │           ├── check-deps.sh
+│   │           ├── check-deps.ps1
 │   │           ├── install-dep.sh
+│   │           ├── install-dep.ps1
 │   │           ├── decompile.sh
-│   │           └── find-api-calls.sh
+│   │           ├── decompile.ps1
+│   │           ├── find-api-calls.sh
+│   │           └── find-api-calls.ps1
 │   └── commands/
 │       └── decompile.md                    # /decompile 命令说明
 ├── LICENSE
@@ -231,7 +263,7 @@ android-reverse-engineering-skill/
 - [jadx — Dex to Java 反编译器](https://github.com/skylot/jadx)
 - [Fernflower — JetBrains 反编译器](https://github.com/JetBrains/fernflower)
 - [Vineflower — Fernflower 社区分支](https://github.com/Vineflower/vineflower)
-- [dex2jar — DEX 转 JAR 工具](https://github.com/pxb1988/dex2jar)
+- [dex2jar — DEX 转 JAR 工具](https://github.com/ThexXTURBOXx/dex2jar)
 - [apktool — Android 资源解码工具](https://apktool.org/)
 - [Rizin — 开源二进制逆向工具链](https://rizin.re/)
 - [Frida — 动态插桩工具](https://frida.re/)
