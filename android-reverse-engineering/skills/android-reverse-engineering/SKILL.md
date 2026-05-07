@@ -19,6 +19,26 @@ Do not jump straight into Frida, packet capture, or SO analysis. Start with JADX
 
 Use dynamic analysis only to confirm or bridge gaps that static analysis cannot resolve.
 
+## When to Suggest IDA MCP
+
+IDA MCP provides static binary analysis (disassembly, decompilation, cross-references) for `.so` files. Do NOT suggest it blindly — check these conditions first:
+
+**Suggest IDA MCP when the user asks to:**
+- Find function offsets or exports in a specific SO
+- Decompile a known native function to C pseudocode
+- Trace cross-references to a string, symbol, or address
+- Check whether a SO imports crypto/network libraries
+- Analyze a SO that is NOT obfuscated (standard compiler, recognizable function boundaries)
+
+**Do NOT suggest IDA MCP when:**
+- The SO uses control-flow flattening or similary heavy obfuscation — pseudocode will be unreadable. Use Frida scripts instead.
+- All strings in the SO are encrypted — static search finds nothing. Use `jni_method_trace.js` to capture runtime decryption.
+- The user needs runtime values (keys, tokens, parameters, decrypted data) — IDA can only show static code.
+- The target SO has not yet been identified — suggest `jni_method_trace.js` first to find which SO handles the logic.
+- The user needs to compute or generate a signature, ciphertext, or token — this requires runtime execution, not static analysis.
+
+**Quick check before suggesting:** Use `survey_binary` on the SO. If the output shows only a handful of huge functions (> 10 KB each) instead of many small ones, the binary is obfuscated — skip IDA and suggest Frida.
+
 ## Prerequisites
 
 This skill requires **Java JDK 17+** and **jadx** to be installed. **Fernflower/Vineflower**, **dex2jar**, and **rizin** are optional but recommended for better decompilation quality and native `.so` analysis. Run the dependency checker to verify:
